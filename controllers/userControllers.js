@@ -82,7 +82,33 @@ const login = async (req, res, next) => {
   }
 };
 
+const logout = async (req, res, next) => {
+  try {
+    const { _id } = req.user;
+    await User.findByIdAndUpdate(_id, { token: "" });
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+const current = async (req, res, next) => {
+  try {
+    const { email, name, avatar } = req.user;
+
+    res.json(201).json({
+      name,
+      email,
+      avatar,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
+  logout,
+  current,
 };
