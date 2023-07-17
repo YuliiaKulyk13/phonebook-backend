@@ -1,6 +1,8 @@
 const User = require("../db/model/userModel");
 const gravatar = require("gravatar");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const fs = require("fs/promises");
 
 const { SECRET_KEY } = process.env;
 
@@ -96,11 +98,34 @@ const current = async (req, res, next) => {
   try {
     const { email, name, avatar } = req.user;
 
-    res.json(201).json({
+    res.json({
       name,
       email,
       avatar,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
+
+const uploadAvatar = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { path: tempUpload, originalname } = req.file;
+
+    const filename = `${_id}_${originalname}`;
+
+    const resultUpload = path.join(avatarsDir, filename);
+
+    await fs.rename(tempUpload, resultUpload);
+
+    const avatarUrl = path.join("avatars", filename);
+
+    await User.findByIdAndUpdate(_id, { avatarUrl });
+
+    res.json({ avatarUrl });
   } catch (error) {
     next(error);
   }
@@ -111,4 +136,5 @@ module.exports = {
   login,
   logout,
   current,
+  uploadAvatar,
 };
